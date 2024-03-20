@@ -36,7 +36,7 @@ async def image(image_id: str):
     if not image_data:
         # If not, fetch the image from the source and cache it
         image_data = get_image_from_source(image_id).read()
-        cache.set(image_id, image_data, time=60 * 60)  # Cache for 1 hour
+        cache.set(image_id, image_data)  # Cache for 1 hour
     else:
         pass
         # If it's cached, wrap the binary data in BytesIO for streaming
