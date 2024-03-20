@@ -10,7 +10,7 @@ app = FastAPI()
 
 
 # Assuming Memcached is running on localhost with the default port
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = memcache.Client(['192.168.0.21:11211', '192.168.0.22:11211', '192.168.0.23:11211'], debug=0)
 
 def get_image_from_source(image_id):
     """
