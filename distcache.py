@@ -6,14 +6,20 @@ from PIL import Image, ImageDraw
 import uvicorn
 import random
 import pyrqlite.dbapi2 as db
+import json
+
+with open('config.json') as f:
+    config = json.load(f)
 
 app = FastAPI()
 
-conn = db.connect(host='localhost', port=4001)
+conn = db.connect(host=config["own_host"], port=config['db_port'])
 num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
-cache = memcache.Client(['192.168.0.21:11211', '192.168.0.22:11211', '192.168.0.23:11211'], debug=0)
+cache = memcache.Client(config["cache_hosts"], debug=0)
+
+
 
 @app.get("/distcache/stats")
 async def stats():
@@ -38,6 +44,7 @@ async def get_image_from_source(image_id):
             return row[0]
         return None
 
+
 async def generate_random_image() -> io.BytesIO:
     image_data = io.BytesIO()
     s1, s2 = random.randint(200, 700), random.randint(200, 700)
@@ -46,6 +53,7 @@ async def generate_random_image() -> io.BytesIO:
     image.save(image_data, format="PNG")
     image_data.seek(0)
     return image_data
+
 
 @app.get("/distcache/set_rng_image")
 async def set_rng_image():
@@ -57,7 +65,7 @@ async def set_rng_image():
 
 
 @app.get("/distcache/update/{image_id}")
-async def update_image(image_id : str):
+async def update_image(image_id: str):
     with conn.cursor() as cur:
         cur.execute("SELECT EXISTS(SELECT 1 FROM images WHERE image_id = ?)", (image_id,))
         row = cur.fetchone()
@@ -67,6 +75,7 @@ async def update_image(image_id : str):
         cur.execute("UPDATE images SET image = ? WHERE image_id = ?", (image_data.read(), image_id))
     cache.delete(image_id)
     return {"message": "Image updated successfully"}
+
 
 @app.get("/distcache/image/{image_id}")
 async def image(image_id: str):
@@ -83,12 +92,12 @@ async def image(image_id: str):
         num_cache_hits += 1
     global num_requests
     num_requests += 1
-        # If it's cached, wrap the binary data in BytesIO for streaming
-        # image_data = io.BytesIO(image_data)
+    # If it's cached, wrap the binary data in BytesIO for streaming
+    # image_data = io.BytesIO(image_data)
     return Response(image_data, media_type="image/png")
 
 
 if __name__ == "__main__":
     with conn.cursor() as cur:
         cur.execute("CREATE TABLE IF NOT EXISTS images (image_id integer PRIMARY KEY AUTOINCREMENT, image BLOB)")
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    uvicorn.run(app, host="0.0.0.0", port=config["own_port"])
