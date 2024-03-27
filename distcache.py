@@ -7,6 +7,7 @@ import uvicorn
 import random
 import pyrqlite.dbapi2 as db
 import json
+import datetime
 
 with open('config.json') as f:
     config = json.load(f)
@@ -18,7 +19,6 @@ num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
 cache = memcache.Client(config["cache_hosts"], debug=0)
-
 
 
 @app.get("/distcache/stats")
@@ -50,6 +50,8 @@ async def generate_random_image() -> io.BytesIO:
     s1, s2 = random.randint(200, 700), random.randint(200, 700)
     r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
     image = Image.new("RGB", (s1, s2), (r, g, b))
+    draw = ImageDraw.Draw(image)
+    draw.text((s1 // 2, s2 // 2), f"{datetime.datetime.utcnow()}", fill=(255 - r, 255 - g, 255 - b))
     image.save(image_data, format="PNG")
     image_data.seek(0)
     return image_data
@@ -74,7 +76,7 @@ async def update_image(image_id: str):
         image_data = await generate_random_image()
         cur.execute("UPDATE images SET image = ? WHERE image_id = ?", (image_data.read(), image_id))
     cache.delete(image_id)
-    return {"message": "Image updated successfully"}
+    return Response(image_data, media_type="image/png")
 
 
 @app.get("/distcache/image/{image_id}")
