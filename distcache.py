@@ -45,7 +45,7 @@ async def get_image_from_source(image_id):
         return None
 
 
-async def generate_random_image() -> io.BytesIO:
+async def generate_random_image() -> bytes:
     image_data = io.BytesIO()
     s1, s2 = random.randint(200, 700), random.randint(200, 700)
     r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
@@ -54,14 +54,14 @@ async def generate_random_image() -> io.BytesIO:
     draw.text((s1 // 2, s2 // 2), f"{datetime.datetime.utcnow()}", fill=(255 - r, 255 - g, 255 - b))
     image.save(image_data, format="PNG")
     image_data.seek(0)
-    return image_data
+    return image_data.read()
 
 
 @app.get("/distcache/set_rng_image")
 async def set_rng_image():
     image_data = await generate_random_image()
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO images (image) VALUES (?) RETURNING image_id", (image_data.read(),))
+        cur.execute("INSERT INTO images (image) VALUES (?) RETURNING image_id", (image_data,))
         image_id = cur.fetchone()[0]
     return {"image_id": image_id}
 
@@ -74,7 +74,7 @@ async def update_image(image_id: str):
         if not row:
             return Response(content="Image not found", status_code=404)
         image_data = await generate_random_image()
-        cur.execute("UPDATE images SET image = ? WHERE image_id = ?", (image_data.read(), image_id))
+        cur.execute("UPDATE images SET image = ? WHERE image_id = ?", (image_data, image_id))
     cache.delete(image_id)
     return Response(image_data, media_type="image/png")
 
