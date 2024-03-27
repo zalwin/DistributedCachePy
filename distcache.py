@@ -13,7 +13,7 @@ conn = db.connect(host='localhost', port=4001)
 num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
-cache = memcache.Client(['127.0.0.1:11211'], debug=0)
+cache = memcache.Client(['192.168.0.21:11211', '192.168.0.22:11211', '192.168.0.23:11211'], debug=0)
 
 @app.get("/distcache/stats")
 async def stats():

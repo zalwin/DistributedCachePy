@@ -1,0 +1,11 @@
+[Unit]
+Description=Distributed Cache for Images
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/studienprojekte/DistributedCachePy
+ExecStart=/usr/bin/python3 distcache.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
