@@ -1,3 +1,4 @@
+from start_application import start_application
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
 import memcache
@@ -9,12 +10,14 @@ import pyrqlite.dbapi2 as db
 import json
 import datetime
 
+start_application()
+
 with open('config.json') as f:
     config = json.load(f)
 
 app = FastAPI()
 
-conn = db.connect(host=config["own_host"], port=config['db_port'])
+conn = db.connect(host="127.0.0.1", port=config['db_port'])
 num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
