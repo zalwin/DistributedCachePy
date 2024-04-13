@@ -104,7 +104,7 @@ async def image(image_id: str):
     # image_data = io.BytesIO(image_data)
     return Response(image_data, media_type="image/png")
 
-@app.get('/distcache/update_stream')
+@app.get('/distcache/events')
 async def update_stream(request: Request):
     async def update_generator():
         global updated_images
