@@ -36,7 +36,7 @@ async def stats():
 async def get_image_from_source(image_id):
     """
     This function simulates getting an image from a source.
-    Replace it with actual logic to fetch your image.
+    If no image is found, generate a new image.
     """
     # For demonstration, generate an image dynamically using PIL
     # In practice, you'd fetch the image from disk, an API, etc.
@@ -45,7 +45,9 @@ async def get_image_from_source(image_id):
         row = cur.fetchone()
         if row:
             return row[0]
-        return None
+        new_image = await generate_random_image()
+        cur.execute("INSERT INTO images (image) VALUES (?)", (new_image,))
+        return new_image
 
 
 async def generate_random_image() -> bytes:
@@ -59,14 +61,6 @@ async def generate_random_image() -> bytes:
     image_data.seek(0)
     return image_data.read()
 
-
-@app.get("/distcache/set_rng_image")
-async def set_rng_image():
-    image_data = await generate_random_image()
-    with conn.cursor() as cur:
-        cur.execute("INSERT INTO images (image) VALUES (?) RETURNING image_id", (image_data,))
-        image_id = cur.fetchone()[0]
-    return {"image_id": image_id}
 
 
 @app.get("/distcache/update/{image_id}")
