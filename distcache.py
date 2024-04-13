@@ -1,4 +1,4 @@
-from start_application import start_application
+from start_application import start_application, own_host
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
 import memcache
@@ -17,7 +17,7 @@ with open('config.json') as f:
 
 app = FastAPI()
 
-conn = db.connect(host="127.0.0.1", port=config['db_port'])
+conn = db.connect(host=own_host, port=config['db_port'])
 num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
