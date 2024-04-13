@@ -11,6 +11,7 @@ import json
 import datetime
 from sse_starlette.sse import EventSourceResponse
 from queue import Queue
+import asyncio
 
 own_host = start_application()
 
@@ -112,6 +113,7 @@ async def update_stream(request: Request):
                 break
             if not updated_images.empty():
                 yield f"data: {updated_images.get()}\n\n"
+        await asyncio.sleep(0.1)
     return EventSourceResponse(update_generator())
 
 if __name__ == "__main__":
