@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import time
+import atexit
 
 own_host = os.popen("hostname -I | awk '{print $1}'").read().strip()
 def start_application():
@@ -20,3 +22,12 @@ def start_application():
                   f"-http-addr={own_host}:4001 "
                   f"-raft-addr={own_host}:4002 "
                   f"-join {host1}:4002 data & disown; popd\"")
+    for i in range(10):
+        if os.system("curl -s http://localhost:4001/status") == 0:
+            break
+        time.sleep(1)
+    db_pid = os.popen("pgrep rqlited").read().strip()
+    if db_pid:
+        atexit.register(lambda: os.system(f"kill -9 {db_pid}"))
+    else:
+        sys.exit("Failed to start rqlite")
