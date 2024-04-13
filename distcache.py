@@ -1,5 +1,5 @@
 from start_application import start_application
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Request
 from fastapi.responses import StreamingResponse
 import memcache
 import io
@@ -9,6 +9,8 @@ import random
 import pyrqlite.dbapi2 as db
 import json
 import datetime
+from sse_starlette.sse import EventSourceResponse
+from queue import Queue
 
 own_host = start_application()
 
@@ -22,7 +24,7 @@ num_requests = 0
 num_cache_hits = 0
 # Assuming Memcached is running on localhost with the default port
 cache = memcache.Client(config["cache_hosts"], debug=0)
-
+updated_images = Queue()
 
 @app.get("/distcache/stats")
 async def stats():
@@ -32,6 +34,11 @@ async def stats():
         "hit_ratio": num_cache_hits / num_requests if num_requests > 0 else 0,
     }
 
+@app.get("/distcache/reset_stats")
+async def reset_stats():
+    global num_cache_hits, num_requests
+    num_requests, num_cache_hits = 0,0
+    return Response(content="Stats reset", status_code=200)
 
 async def get_image_from_source(image_id):
     """
@@ -73,6 +80,7 @@ async def update_image(image_id: str):
         image_data = await generate_random_image()
         cur.execute("UPDATE images SET image = ? WHERE image_id = ?", (image_data, image_id))
     cache.delete(image_id)
+    updated_images.put(image_id)
     return Response(image_data, media_type="image/png")
 
 
@@ -95,6 +103,16 @@ async def image(image_id: str):
     # image_data = io.BytesIO(image_data)
     return Response(image_data, media_type="image/png")
 
+@app.get('/distcache/update_stream')
+async def update_stream(request: Request):
+    async def update_generator():
+        global updated_images
+        while True:
+            if await request.is_disconnected():
+                break
+            if not updated_images.empty():
+                yield f"data: {updated_images.get()}\n\n"
+    return EventSourceResponse(update_generator())
 
 if __name__ == "__main__":
     with conn.cursor() as cur:
