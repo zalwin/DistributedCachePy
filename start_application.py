@@ -9,13 +9,14 @@ def start_application():
     config = json.load(open("config.json"))
     own_hostnames = os.popen("hostname -I").read().strip().split(" ")
     own_host = None
+    host1, host2, host3 = config["host1"], config["host2"], config["host3"]
     for own_hostname in own_hostnames:
-        if own_hostname in config["hosts"]:
+        if own_hostname in (host1, host2, host3):
             own_host = own_hostname
             break
     if own_host is None:
         sys.exit("This host is not in the config file. Please change the config file to include this host.")
-    host1, host2, host3 = config["host1"], config["host2"], config["host3"]
+
     os.system("systemctl start memcached")
     #os.system("systemctl start rqlite")
     node_id = 1 if own_host == host1 else (2 if own_host == host2 else 3)
