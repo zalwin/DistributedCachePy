@@ -1,9 +1,8 @@
 import os
 import sys
 import json
-import subprocess
 
-own_host = subprocess.run(["hostname", "-I", "|", "awk", "'{print $1}'"], capture_output=True)
+own_host = os.popen("hostname -I | awk '{print $1}'").read().strip()
 def start_application():
     config = json.load(open("config.json"))
     host1, host2, host3 = config["host1"], config["host2"], config["host3"]
