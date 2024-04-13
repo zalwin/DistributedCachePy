@@ -4,14 +4,21 @@ import json
 import time
 import atexit
 
-own_host = os.popen("hostname -I | awk '{print $1}'").read().strip()
+
 def start_application():
     config = json.load(open("config.json"))
+    own_hostnames = os.popen("hostname -I").read().strip().split(" ")
+    own_host = None
+    for own_hostname in own_hostnames:
+        if own_hostname in config["hosts"]:
+            own_host = own_hostname
+            break
+    if own_host is None:
+        sys.exit("This host is not in the config file. Please change the config file to include this host.")
     host1, host2, host3 = config["host1"], config["host2"], config["host3"]
     os.system("systemctl start memcached")
     #os.system("systemctl start rqlite")
     node_id = 1 if own_host == host1 else (2 if own_host == host2 else 3)
-    print(own_host)
     if own_host == host1:
         os.system(f"bash -c \"pushd /home/pi/rqlite; nohup /home/pi/rqlite/rqlited -node-id 1 "
                   f"-http-addr={own_host}:4001 "
@@ -31,3 +38,4 @@ def start_application():
         atexit.register(lambda: os.system(f"kill -9 {db_pid}"))
     else:
         sys.exit("Failed to start rqlite")
+    return own_host

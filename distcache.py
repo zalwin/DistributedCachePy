@@ -1,4 +1,4 @@
-from start_application import start_application, own_host
+from start_application import start_application
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
 import memcache
@@ -10,7 +10,7 @@ import pyrqlite.dbapi2 as db
 import json
 import datetime
 
-start_application()
+own_host = start_application()
 
 with open('config.json') as f:
     config = json.load(f)
