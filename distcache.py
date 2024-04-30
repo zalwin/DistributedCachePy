@@ -23,6 +23,7 @@ app = FastAPI()
 conn = db.connect(host=own_host, port=config['db_port'])
 num_requests = 0
 num_cache_hits = 0
+num_images_genarated = 0
 # Assuming Memcached is running on localhost with the default port
 cache = memcache.Client(config["cache_hosts"], debug=0)
 updated_images = Queue()
@@ -33,6 +34,7 @@ async def stats():
         "num_requests": num_requests,
         "num_cache_hits": num_cache_hits,
         "hit_ratio": num_cache_hits / num_requests if num_requests > 0 else 0,
+        "num_images_generated": num_images_genarated
     }
 
 @app.get("/distcache/reset_stats")
@@ -59,6 +61,8 @@ async def get_image_from_source(image_id):
 
 
 async def generate_random_image() -> bytes:
+    global num_images_genarated
+    num_images_genarated += 1
     image_data = io.BytesIO()
     s1, s2 = random.randint(200, 700), random.randint(200, 700)
     r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
