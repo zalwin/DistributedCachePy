@@ -112,7 +112,7 @@ async def update_stream(request: Request):
             if await request.is_disconnected():
                 break
             if not updated_images.empty():
-                yield f"data: {updated_images.get()}\n\n"
+                yield f"{updated_images.get()}\n\n"
         await asyncio.sleep(0.1)
     return EventSourceResponse(update_generator())
 
