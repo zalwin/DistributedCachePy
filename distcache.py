@@ -39,8 +39,8 @@ async def stats():
 
 @app.get("/distcache/reset_stats")
 async def reset_stats():
-    global num_cache_hits, num_requests
-    num_requests, num_cache_hits = 0,0
+    global num_cache_hits, num_requests, num_images_genarated
+    num_requests, num_cache_hits, num_images_genarated = 0,0,0
     return Response(content="Stats reset", status_code=200)
 
 async def get_image_from_source(image_id):
@@ -106,6 +106,16 @@ async def image(image_id: str):
     num_requests += 1
     # If it's cached, wrap the binary data in BytesIO for streaming
     # image_data = io.BytesIO(image_data)
+    return Response(image_data, media_type="image/png")
+
+@app.get('/distcache/skip_cache/{image_id}')
+async def skip_cache(image_id: str):
+    with conn.cursor() as cur:
+        cur.execute("SELECT image FROM images WHERE image_id = ?", (image_id,))
+        row = cur.fetchone()
+        if not row:
+            return Response(content="Image not found", status_code=404)
+        image_data = row[0]
     return Response(image_data, media_type="image/png")
 
 @app.get('/distcache/events')
