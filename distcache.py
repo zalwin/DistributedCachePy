@@ -27,7 +27,7 @@ num_images_genarated = 0
 # Assuming Memcached is running on localhost with the default port
 cache = memcache.Client(config["cache_hosts"], debug=0)
 updated_images = Queue()
-current_cache_hits = [1000]
+current_cache_hits = []
 
 @app.get("/distcache/stats")
 async def stats():
@@ -43,6 +43,7 @@ async def stats():
 async def reset_stats():
     global num_cache_hits, num_requests, num_images_genarated, current_cache_hits
     num_requests, num_cache_hits, num_images_genarated = 0,0,0
+    current_cache_hits = []
     return Response(content="Stats reset", status_code=200)
 
 async def get_image_from_source(image_id):
@@ -107,7 +108,7 @@ async def image(image_id: str):
         num_cache_hits += 1
     global num_requests, current_cache_hits
     if num_requests < 999:
-        current_cache_hits[num_requests] = num_cache_hits
+        current_cache_hits.append(num_cache_hits)
     num_requests += 1
     # If it's cached, wrap the binary data in BytesIO for streaming
     # image_data = io.BytesIO(image_data)
