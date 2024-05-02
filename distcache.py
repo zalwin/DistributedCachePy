@@ -107,7 +107,7 @@ async def image(image_id: str):
 
         num_cache_hits += 1
     global num_requests, current_cache_hits
-    if num_requests < 999:
+    if num_requests < 9999:
         current_cache_hits.append(num_cache_hits)
     num_requests += 1
     # If it's cached, wrap the binary data in BytesIO for streaming
