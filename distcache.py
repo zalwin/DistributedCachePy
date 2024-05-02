@@ -35,12 +35,13 @@ async def stats():
         "num_requests": num_requests,
         "num_cache_hits": num_cache_hits,
         "hit_ratio": num_cache_hits / num_requests if num_requests > 0 else 0,
-        "num_images_generated": num_images_genarated
+        "num_images_generated": num_images_genarated,
+        "cache_hits": current_cache_hits
     }
 
 @app.get("/distcache/reset_stats")
 async def reset_stats():
-    global num_cache_hits, num_requests, num_images_genarated
+    global num_cache_hits, num_requests, num_images_genarated, current_cache_hits
     num_requests, num_cache_hits, num_images_genarated = 0,0,0
     return Response(content="Stats reset", status_code=200)
 
