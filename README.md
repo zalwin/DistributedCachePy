@@ -41,9 +41,11 @@ Zusätzlich sollte noch die .service-Datei aus dem Repository in /etc/systemd/sy
 Das Programm lässt sich mit folgenden Befehlen starten und stoppen:
 ```bash
 #start:
+systemctl start memcached.service
 systemctl start distcache.service
 #stop
 systemctl stop distcache.service
+systemctl stop memcached.service
 ```
 
 ## 4. Schnittstellen

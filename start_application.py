@@ -22,8 +22,6 @@ def start_application():
     if own_host is None:
         sys.exit("This host is not in the config file. Please change the config file to include this host.")
 
-    os.system("systemctl start memcached")
-
     node_id = 1 if own_host == host1 else (2 if own_host == host2 else 3)
     if own_host == host1:
         os.system(f"bash -c \"pushd /home/pi/rqlite; nohup /home/pi/rqlite/rqlited -node-id 1 "
