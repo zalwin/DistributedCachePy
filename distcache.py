@@ -31,6 +31,10 @@ current_cache_hits = []
 
 @app.get("/distcache/stats")
 async def stats():
+    """
+    Gibt die Statistiken des Servers zurück.
+    :return: Dict von Statistiken
+    """
     return {
         "num_requests": num_requests,
         "num_cache_hits": num_cache_hits,
@@ -41,6 +45,10 @@ async def stats():
 
 @app.get("/distcache/reset_stats")
 async def reset_stats():
+    """
+    Setzt die Statistiken zurück.
+    :return: Status
+    """
     global num_cache_hits, num_requests, num_images_genarated, current_cache_hits
     num_requests, num_cache_hits, num_images_genarated = 0,0,0
     current_cache_hits = []
@@ -48,8 +56,9 @@ async def reset_stats():
 
 async def get_image_from_source(image_id):
     """
-    This function simulates getting an image from a source.
-    If no image is found, generate a new image.
+    Diese Funktion frägt das Bild von der Datenbank ab.
+    Falls das Bild nicht in der Datenbank ist, wird ein neues Bild generiert.
+    :param image_id: ID des Bildes
     """
     # For demonstration, generate an image dynamically using PIL
     # In practice, you'd fetch the image from disk, an API, etc.
@@ -64,6 +73,10 @@ async def get_image_from_source(image_id):
 
 
 async def generate_random_image() -> bytes:
+    """
+    Generiert ein zufälliges Bild.
+    :return: Bild als Bytes
+    """
     global num_images_genarated
     num_images_genarated += 1
     image_data = io.BytesIO()
@@ -80,6 +93,11 @@ async def generate_random_image() -> bytes:
 
 @app.get("/distcache/update/{image_id}")
 async def update_image(image_id: str):
+    """
+    Aktualisiert das Bild in der Datenbank. Sendet Nachricht an alle verbundenen Clients.
+    :param image_id: ID des Bilds
+    :return: Status
+    """
     with conn.cursor() as cur:
         cur.execute("SELECT EXISTS(SELECT 1 FROM images WHERE image_id = ?)", (image_id,))
         row = cur.fetchone()
@@ -94,6 +112,11 @@ async def update_image(image_id: str):
 
 @app.get("/distcache/image/{image_id}")
 async def image(image_id: str):
+    """
+    Gibt das Bild mit der gegebenen ID zurück. Funktioniert bei den meisten IDs.
+    :param image_id: Bild-ID
+    :return: Bild oder Status 404
+    """
     # Check if the image is in cache
     image_data = cache.get(image_id)
     global num_cache_hits
@@ -116,6 +139,11 @@ async def image(image_id: str):
 
 @app.get('/distcache/skip_cache/{image_id}')
 async def skip_cache(image_id: str):
+    """
+    Gibt das Bild mit der gegebenen ID zurück, ohne den Cache zu verwenden. Für Testzwecke.
+    :param image_id: Bild-ID
+    :return: Bild oder Status 404
+    """
     with conn.cursor() as cur:
         cur.execute("SELECT image FROM images WHERE image_id = ?", (image_id,))
         row = cur.fetchone()
@@ -126,6 +154,11 @@ async def skip_cache(image_id: str):
 
 @app.get('/distcache/events')
 async def update_stream(request: Request):
+    """
+    Stream für die Aktualisierung von Bildern. Siehe update_image.
+    :param request: Request
+    :return: EventStream
+    """
     async def update_generator():
         global updated_images
         while True:
